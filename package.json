@@ -1,0 +1,24 @@
+{
+  "name": "content_management_system",
+  "version": "1.0.0",
+  "description": "CMS for managing employees",
+  "main": "cms.js",
+  "scripts": {
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acdollard/content_management_system.git"
+  },
+  "author": "Alex Dollard",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/acdollard/content_management_system/issues"
+  },
+  "homepage": "https://github.com/acdollard/content_management_system#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^7.0.3",
+    "mysql": "^2.18.1"
+  }
+}
