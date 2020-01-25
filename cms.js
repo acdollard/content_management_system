@@ -26,5 +26,57 @@ var connection = mysql.createConnection({
     connection.query("SELECT first_name, last_name, title, salary, dept.name FROM employee as emp LEFT JOIN role as role ON emp.role_id=role.id INNER JOIN department as dept ON dept.id=role.department_id", function(err, result) {
         if (err) throw err;
         console.table(result);
+        runSearch();
     })
   });
+
+
+  function runSearch() {
+      inquirer.prompt([
+          {
+              name: "action",
+              type: "list",
+              message: "What would you like to do?",
+              choices: [
+                    "view all employees",
+                    "view all by department",
+                    "view all by manager",
+                    "add employee",
+                    "remove employee",
+                    "update employee role",
+                    "update employee manager"
+              ]
+          }
+      ]).then(function(data){
+          switch (data.action) {
+            case "view all employees":
+            //function
+            break;
+
+            case "view all by department":
+            //function
+            break;
+
+            case "view all by manager":
+            //function
+            break;
+
+            case "add employee":
+            //function
+            break;
+
+            case "remove employee":
+            //function
+            break;
+
+            case "update employee role":
+            //function
+            break;
+
+            case "update employee manager":
+            //function
+            break;
+
+          }
+      })
+  }
