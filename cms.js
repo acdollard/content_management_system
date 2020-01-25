@@ -23,15 +23,20 @@ var connection = mysql.createConnection({
     if (err) throw err;
     // run the start function after the connection is made to prompt the user
     console.log("Connected to database.");
-    connection.query("SELECT first_name, last_name, title, salary, dept.name FROM employee as emp LEFT JOIN role as role ON emp.role_id=role.id INNER JOIN department as dept ON dept.id=role.department_id", function(err, result) {
-        if (err) throw err;
-        console.table(result);
+    // connection.query("SELECT first_name, last_name, title, salary, dept.name FROM employee as emp LEFT JOIN role as role ON emp.role_id=role.id INNER JOIN department as dept ON dept.id=role.department_id", function(err, result) {
+    //     if (err) throw err;
+    //     console.table(result);
+        // showData();
         runSearch();
-    })
-  });
+  
+      });
+    
+    
 
 
-  function runSearch() {
+
+
+function runSearch() {
       inquirer.prompt([
           {
               name: "action",
@@ -50,7 +55,7 @@ var connection = mysql.createConnection({
       ]).then(function(data){
           switch (data.action) {
             case "view all employees":
-            //function
+            showData();
             break;
 
             case "view all by department":
@@ -58,7 +63,7 @@ var connection = mysql.createConnection({
             break;
 
             case "view all by manager":
-            //function
+            showManagers();
             break;
 
             case "add employee":
@@ -80,3 +85,32 @@ var connection = mysql.createConnection({
           }
       })
   }
+
+
+
+
+ function showData() {
+        connection.query(`SELECT emp.id, first_name, last_name, title, salary, dept.name 
+        FROM employee as emp LEFT JOIN role as role ON emp.role_id=role.id 
+        INNER JOIN department as dept ON dept.id=role.department_id`,
+        function(err, result) {
+        if (err) throw new Error ("Ya got a problem!");
+        console.table(result);
+        runSearch();
+    });
+}
+
+
+
+function showManagers() {
+    connection.query(  `SELECT e1.last_name AS Employee, e2.last_name AS Manager
+    FROM employee as e1
+    LEFT JOIN employee as e2
+     ON e1.manager_id=e2.id`,
+    function(err, result) {
+        if (err) throw new Error ("Ya got a sitch!");
+        console.table(result);
+})
+};
+
+// showAll();
