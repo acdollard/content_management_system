@@ -27,7 +27,7 @@ var connection = mysql.createConnection({
     //     if (err) throw err;
     //     console.table(result);
         // showData();
-        runSearch();
+        promptUser();
   
       });
     
@@ -36,7 +36,7 @@ var connection = mysql.createConnection({
 
 
 
-function runSearch() {
+function promptUser() {
       inquirer.prompt([
           {
               name: "action",
@@ -49,7 +49,8 @@ function runSearch() {
                     "add employee",
                     "remove employee",
                     "update employee role",
-                    "update employee manager"
+                    "update employee manager",
+                    // "Exit."
               ]
           }
       ]).then(function(data){
@@ -59,7 +60,7 @@ function runSearch() {
             break;
 
             case "view all by department":
-            //function
+            showByDepartment();
             break;
 
             case "view all by manager":
@@ -82,6 +83,14 @@ function runSearch() {
             //function
             break;
 
+        //this part made the inquirer options repeat, for some reason
+            // case "Exit.":
+            // connection.end();
+            // break;
+
+            default:
+            connection.end();
+
           }
       })
   }
@@ -90,27 +99,46 @@ function runSearch() {
 
 
  function showData() {
-        connection.query(`SELECT emp.id, first_name, last_name, title, salary, dept.name 
+        connection.query(`SELECT emp.id, CONCAT( emp.first_name, " ", emp.last_name ) AS name, role.title, role.salary, dept.name AS department 
         FROM employee as emp LEFT JOIN role as role ON emp.role_id=role.id 
         INNER JOIN department as dept ON dept.id=role.department_id`,
         function(err, result) {
         if (err) throw new Error ("Ya got a problem!");
         console.table(result);
-        runSearch();
+        promptUser();
     });
 }
 
 
 
 function showManagers() {
-    connection.query(  `SELECT e1.last_name AS Employee, e2.last_name AS Manager
-    FROM employee as e1
-    LEFT JOIN employee as e2
-     ON e1.manager_id=e2.id`,
+    connection.query(  `SELECT CONCAT( emp1.first_name, " ", emp1.last_name ) AS Employee, 
+    CONCAT( emp2.first_name, " ", emp2.last_name ) AS Manager
+    FROM employee as emp1
+    LEFT JOIN employee as emp2
+     ON emp1.manager_id=emp2.id`,
     function(err, result) {
         if (err) throw new Error ("Ya got a sitch!");
         console.table(result);
+        promptUser();
 })
 };
 
 // showAll();
+
+
+function showByDepartment () {
+    connection.query( `SELECT CONCAT( a.first_name, " ", a.last_name ) AS Employee, c.name AS Department
+    FROM employee AS a
+    INNER JOIN role AS b 
+    ON a.role_id=b.id
+    INNER JOIN department AS c
+    ON b.department_id=c.id`, 
+    function (err, result) {
+        if (err) throw new Error("Ya got an uh-oh!");
+        console.table(result);
+        promptUser();
+    })
+}
+
+
