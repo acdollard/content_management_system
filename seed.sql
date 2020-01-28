@@ -1,10 +1,10 @@
 
 INSERT INTO department (name)
-VALUES ("Legal"),("Engineering"),("Sales"),("Marketing"),("Finance");
+VALUES ("Legal"),("Engineering"),("Sales"),("Marketing"),("Finance"),("Executive");
 
 
 INSERT INTO role (title, salary, department_id)
-VALUES ("CEO", 200000, null); 
+VALUES ("CEO", 200000, 6); 
 
 INSERT INTO role (title, salary, department_id)
 VALUES ("Engineering Manager", 150000, 2),("Engineer", 100000, 2), ("Finance Manager", 150000, 5),
