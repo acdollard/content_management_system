@@ -57,7 +57,7 @@ function promptUser() {
             break;
 
             case "add employee":
-            addEmployee();
+            addNew();
             break;
 
             case "remove employee":
@@ -127,99 +127,6 @@ function showByDepartment () {
     })
 }
 
-function addEmployee() {
-    //query to fetch current database information
-    connection.query( `SELECT a.id, CONCAT( a.first_name, " ", a.last_name ) AS Employee, b.title AS role,
-        c.name AS Department, CONCAT( d.first_name, " ", d.last_name) AS manager
-    FROM employee AS a
-    RIGHT JOIN role AS b 
-    ON a.role_id=b.id
-    INNER JOIN department AS c
-    ON b.department_id=c.id
-    INNER JOIN employee as d
-    ON a.manager_id=d.id`, 
-    function (err, result){
-        if (err) throw new Error ("Couldn't fetch data");
-
-        inquirer.prompt([
-            {
-                name: "firstName",
-                type: "input",
-                message: "What is the first name of the new employee?"
-            },
-            {
-                name: "lastName",
-                type: "input",
-                message: "What is the last name of the new employee?"
-            },
-            {
-                name: "role",
-                type: "rawlist",
-                message: "What is the role ID of the new employee?",
-                choices: function() {
-                    let role_array = [];
-                    for(let i=0; i<result.length; i++){
-                        role_array.push(result[i].role)
-                    }
-                    return role_array;
-                }
-            },
-            {
-                name: "salary",
-                type: "input",
-                message: "What is the salary of the new employee?"
-            },
-            // {
-            //     name: "department",
-            //     type: "rawlist",
-            //     message: "What department does the new employee work in?",
-            //     choices: function() {
-            //         //shows list of departments as choices 
-            //         let department_array = [];
-            //         for(i=0; i<result.length; i++){
-            //             //prevents duplicates from being added to list of departments
-            //             if(department_array.includes(result[i].Department) === false){
-            //             department_array.push(result[i].Department)
-            //             }
-            //         }
-            //         return department_array;
-            //     }
-            // },
-            {
-                name: "manager",
-                type: "rawlist",
-                message: "Who is the new employee's manager?",
-                choices: function() {
-                    //shows list of current employees as choices
-                    let manager_array = [];
-                    for(let i=0; i<result.length; i++){
-                        //prevents duplicates from being added to the array
-                        if(manager_array.includes(result[i].Employee) === false){
-
-                        manager_array.push(result[i].Employee);
-                    }
-                }
-                    return manager_array;
-                }
-            }
-            
-        ]).then( data => {
-            //create new employee
-            connection.query("INSERT INTO employee SET ?",
-                {
-                    first_name: data.firstName,
-                    last_name: data.lastName,
-                    role_id: connection.query()
-
-                }
-            )
-            
-        })
-    });
-}
-
-
-
 
     function removeEmployee() {
         //querys a list of employees by last name
@@ -262,73 +169,8 @@ function addEmployee() {
 }
 
 
-function updateEmployee() {
-    connection.query(`SELECT a.id, a.last_name, b.title FROM employee AS a
-    LEFT JOIN role AS b
-    ON a.role_id=b.id`,
-    function(err, result) {
-        if (err) throw new Error("there's a problem!");
 
-        console.table(result);
 
-        inquirer.prompt([
-            {
-                name: "removed_employee",
-                type: "rawlist",
-                message: "Which employee would you like to update?",
-                choices: function(){
-                    let removedEmpArr = [];
-                    for (let i=0; i< result.length; i++){
-                        removedEmpArr.push(result[i].last_name)
-                    }
-                    return removedEmpArr
-                }
-    
-            },
-            {
-                name: "new_role",
-                type: "rawlist",
-                message: "What is their new role:",
-                choices: function(){
-                    let removedEmpArr = [];
-                    for (let i=0; i< result.length; i++){
-                        removedEmpArr.push(result[i].title)
-                    }
-                    return removedEmpArr
-                }
-            }
-
-        ])
-
-        .then( (data) => {
-            console.log(data)
-            //make a select to get the id number of each role, for future reference
-            connection.query(`SELECT id FROM role WHERE ?`, {title:data.new_role}, 
-            function(err, res) {
-                if (err) throw new Error("OH NOES");
-                
-
-            connection.query(
-                `UPDATE employee SET ? WHERE?`,
-                [
-                {
-                    role_id: res.id
-                },
-                {
-                    last_name: data.removed_employee
-                }
-    
-                ],
-                function(err, res){
-                    if (err) throw err;
-                    console.log("updates last name: " + data.removed_employee + " in database\n");
-                    promptUser();
-                })
-            
-        })
-    })
-})
-}
 
 
 function updateRole() {
@@ -402,5 +244,115 @@ connection.query(`SELECT * FROM role`,
 
 
 // updateRole();
+
+function addNew() {
+    inquirer.prompt([
+        {
+            name: "first_name",
+            type: "input",
+            message: "What is the first name of the new employee?"
+        },
+        {
+            name: "last_name",
+            type: "input",
+            message: "What is the last name of the new employee?"
+        }
+    ]).then(name => {
+        console.log(name)
+        connection.query(`SELECT id, name FROM department`,
+        function(err, res){
+            if (err) throw err;
+            console.log(res);
+            inquirer.prompt([
+                {
+                    name: "dept",
+                    type: "rawlist",
+                    message: "What department does the new employee belong to?",
+                    choices: function(){
+                        let deptArray =[];
+                        for (let i=0; i<res.length; i++){
+                            deptArray.push(res[i].name)
+                        }
+                        return deptArray; 
+                    }
+                }
+            ]).then(departmentRes => {
+                //trying to return only roles associated with the selected department
+                console.log(departmentRes);
+                connection.query(`SELECT title, r.id FROM role AS r 
+                INNER JOIN department AS d
+                ON r.department_id=d.id
+                WHERE d.name=?`,[departmentRes.dept], 
+                function(err, res){
+                    if (err) throw err;
+
+                    console.log(res);
+
+                    inquirer.prompt([
+                        {
+                            name: "role",
+                            type: "rawlist",
+                            message: "What role will they have?",
+                            choices: function() {
+                                let titlesArr =[]; 
+                                for(let i=0; i<res.length; i++){
+                                    titlesArr.push({name: res[i].title, value: res[i].id});
+                                }
+                                return titlesArr;
+
+                            }
+                        }
+                    ]).then(roleRes => {
+                        console.log(roleRes);
+                        console.log(departmentRes);
+                        console.log(name.first_name);
+                        console.log(name.last_name)
+
+                        //query list of employees and their id's for user to select new emp's manager
+                        connection.query(`SELECT id, last_name FROM employee`,
+                        function(err, manRes){
+                            if(err) throw new Error("Unable to find managers list!");
+
+                            console.log(manRes);
+
+                            inquirer.prompt([
+                                {
+                                    name: "manager",
+                                    type: "rawlist",
+                                    message: "Who will be the new employee's manager?",
+                                    choices: function() {
+                                        let manArray = [];
+                                        for(let i=0; i<manRes.length; i++){
+                                            manArray.push({name: manRes[i].last_name, value: manRes[i].id})
+                                        }
+                                        return manArray;
+                                    }
+                                }
+                            ]).then(chosenManager => {
+                                console.log(chosenManager);
+                                console.log(roleRes);
+                                console.log(name.last_name);
+                                console.log(name.first_name);
+
+                                connection.query(`INSERT INTO employee SET ?`,
+                                {
+                                    first_name: name.first_name,
+                                    last_name: name.last_name,
+                                    role_id: roleRes.role,
+                                    manager_id: chosenManager.manager
+                                }, function(err, done){
+                                    if(err) throw new Error("Error creating new employee!");
+                                    console.log( `${name.first_name} ${name.last_name} successfully added!`);
+                                    promptUser();
+                                    
+                                })
+                            })
+                        })
+                    })
+                })
+            })
+        })
+    })
+}
 
 
