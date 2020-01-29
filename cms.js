@@ -69,7 +69,7 @@ function promptUser() {
             break;
 
             case "update employee manager":
-            //function
+            updateManager();
             break;
 
         //this part made the inquirer options repeat, for some reason
@@ -243,7 +243,10 @@ connection.query(`SELECT * FROM role`,
 }
 
 
-// updateRole();
+
+
+
+
 
 function addNew() {
     inquirer.prompt([
@@ -349,6 +352,55 @@ function addNew() {
                             })
                         })
                     })
+                })
+            })
+        })
+    })
+}
+
+
+function updateManager() {
+    connection.query(`SELECT id, last_name, first_name, manager_id FROM employee`,
+    function(err, res){
+        if(err) throw new Error("couldn't fetch employee data");
+
+        inquirer.prompt([
+            {
+                name: "updatedEmp",
+                type: "rawlist",
+                message: "Which employee's manager would you like to change?",
+                choices: function(){
+                    let empArray = [];
+                    for(let i=0; i<res.length; i++){
+                        empArray.push({name:`${res[i].first_name} ${res[i].last_name}` ,value: res[i].id})
+                    }
+                    return empArray;
+                }
+            }
+        ]).then(chosenEmp => {
+            inquirer.prompt([
+                {
+                    name: "updatedMan",
+                    type: "rawlist",
+                    message: "Who will be their new manager?",
+                    choices: function() {
+                        let manArray =[];
+                        for(let i=0; i<res.length; i++){
+                            manArray.push({name:`${res[i].first_name} ${res[i].last_name}` ,value: res[i].id})
+                        }
+                        return manArray; 
+                    }
+                }
+            ]).then(chosenMan => {
+                connection.query(`UPDATE employee SET ? WHERE id=${chosenEmp.updatedEmp}`,
+                {
+                    manager_id: chosenMan.updatedMan
+                },
+                function(err, done){
+                    if(err) throw new Error("Problem updating manager!");
+                    console.log(`Manager updated succesfully!`);
+
+                    promptUser(); 
                 })
             })
         })
