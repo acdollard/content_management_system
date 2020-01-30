@@ -3,6 +3,13 @@ let inquirer = require("inquirer");
 let cTable = require("console.table");
 let SQL_info = require("./SQL_info");
 
+
+
+
+
+
+
+
 // create the connection information for the sql database
 var connection = mysql.createConnection({
     host: "localhost",
@@ -57,7 +64,7 @@ function promptUser() {
             break;
 
             case "add employee":
-            addNew();
+            addEmployee();
             break;
 
             case "remove employee":
@@ -90,7 +97,7 @@ function promptUser() {
  function showData() {
     connection.query(`SELECT emp.id, CONCAT( emp.first_name, " ", emp.last_name ) AS name, role.title, role.salary, dept.name AS department 
     FROM employee as emp LEFT JOIN role as role ON emp.role_id=role.id 
-    INNER JOIN department as dept ON dept.id=role.department_id`,
+    INNER JOIN department as dept ON dept.id=role.department_id ORDER BY emp.id`,
     function(err, result) {
             if (err) throw new Error ("Ya got a problem!");
             console.table(result);
@@ -101,10 +108,12 @@ function promptUser() {
 
 function showManagers() {
     connection.query(  `SELECT emp1.id, CONCAT( emp1.first_name, " ", emp1.last_name ) AS Employee, 
-    CONCAT( emp2.first_name, " ", emp2.last_name ) AS Manager
+    CONCAT( emp2.first_name, " ", emp2.last_name ) AS Manager, emp1.manager_id AS Manager_id
     FROM employee as emp1
     LEFT JOIN employee as emp2
-     ON emp1.manager_id=emp2.id`,
+     ON emp1.manager_id=emp2.id
+     ORDER BY emp1.manager_id`,
+     
     function(err, result) {
         if (err) throw new Error ("Ya got a sitch!");
         console.table(result);
@@ -128,7 +137,7 @@ function showByDepartment () {
 }
 
 
-    function removeEmployee() {
+function removeEmployee() {
         //querys a list of employees by last name
         connection.query(
             `SELECT a.last_name FROM employee AS a`,
@@ -193,47 +202,47 @@ connection.query(`SELECT last_name FROM employee`,
             }
         ]).then(chosenEmp => {
 
-//then query roles table to prompt user to select a new role for chosen employee
-connection.query(`SELECT * FROM role`,
-    function(err, res){
-        if(err) throw new Error("Can't get role table");
-        inquirer.prompt([
-            {
-                name: "new_role",
-                type: "rawlist",
-                message: "What would you like their new role to be?",
-                choices: function() {
-                    let role_Array = [];
-                    for (let i=0; i<res.length; i++){
-                        role_Array.push(res[i].title)
-                    }
-                    return role_Array
-                }
-            }
-        ]).then(response => {
-            console.log(response.new_role)
-            //query roles table again to get id# for specified role
-            connection.query("SELECT id FROM role WHERE ?", 
-            {
-                title: response.new_role
-            },
-            function(err, res) {
-                if (err) throw new Error ("Couldn't fetch role_id");
-                console.table(res);
-                connection.query("UPDATE employee SET ? WHERE ?",
-                [
+        //then query roles table to prompt user to select a new role for chosen employee
+        connection.query(`SELECT * FROM role`,
+            function(err, res){
+                if(err) throw new Error("Can't get role table");
+                inquirer.prompt([
                     {
-                        role_id: res[0].id
+                        name: "new_role",
+                        type: "rawlist",
+                        message: "What would you like their new role to be?",
+                        choices: function() {
+                            let role_Array = [];
+                            for (let i=0; i<res.length; i++){
+                                role_Array.push(res[i].title)
+                            }
+                            return role_Array
+                        }
+                    }
+                ]).then(response => {
+                    console.log(response.new_role)
+                    //query roles table again to get id# for specified role
+                    connection.query("SELECT id FROM role WHERE ?", 
+                    {
+                        title: response.new_role
                     },
-                    {
-                        last_name: chosenEmp.updated_employee
-                    }
-                ],
-                function(err, newRoleId) {if(err) throw new Error("Problem updating table.");
-                console.table(newRoleId);
-            console.log(`Updated ${chosenEmp.updated_employee} to ${response.new_role} successfully!`);
-                promptUser();
-        }
+                    function(err, res) {
+                        if (err) throw new Error ("Couldn't fetch role_id");
+                        console.table(res);
+                        connection.query("UPDATE employee SET ? WHERE ?",
+                        [
+                            {
+                                role_id: res[0].id
+                            },
+                            {
+                                last_name: chosenEmp.updated_employee
+                            }
+                        ],
+                        function(err, newRoleId) {if(err) throw new Error("Problem updating table.");
+                        console.table(newRoleId);
+                    console.log(`Updated ${chosenEmp.updated_employee} to ${response.new_role} successfully!`);
+                        promptUser();
+                }
                 );//closes 379
             })//closes 357
     })//closes 355
@@ -245,20 +254,23 @@ connection.query(`SELECT * FROM role`,
 
 
 
-
-
-
-function addNew() {
+function addEmployee() {
     inquirer.prompt([
         {
             name: "first_name",
             type: "input",
-            message: "What is the first name of the new employee?"
+            message: "What is the first name of the new employee?",
+            validate: function validateFirstName(name) {
+                return name !== "";
+            }
         },
         {
             name: "last_name",
             type: "input",
-            message: "What is the last name of the new employee?"
+            message: "What is the last name of the new employee?",
+            validate: function validateLastName(name) {
+                return name !== "";
+            }
         }
     ]).then(name => {
         console.log(name)
@@ -406,5 +418,6 @@ function updateManager() {
         })
     })
 }
+
 
 

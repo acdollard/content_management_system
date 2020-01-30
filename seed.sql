@@ -1,3 +1,5 @@
+USE CMS_db
+
 
 INSERT INTO department (name)
 VALUES ("Legal"),("Engineering"),("Sales"),("Marketing"),("Finance"),("Executive");
