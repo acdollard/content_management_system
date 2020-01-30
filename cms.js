@@ -14,16 +14,16 @@ const my_prompts = new MyPrompts();
 
 
 
-// create the connection information for the sql database
+// INSERT YOUR SQL INFORMATION HERE
 var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
   
     // Your username
-    user: SQL_info.username,
+    user: "",
   
     // Your password
-    password: SQL_info.password,
+    password: "",
     database: "CMS_db"
   });
   
