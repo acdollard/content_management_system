@@ -5,8 +5,8 @@ let SQL_info = require("./SQL_info");
 
 
 
-
-
+SQL_info.username();
+SQL_info.password();
 
 
 
