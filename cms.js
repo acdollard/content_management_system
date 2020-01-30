@@ -2,9 +2,13 @@ let mysql = require("mysql");
 let inquirer = require("inquirer");
 let cTable = require("console.table");
 let SQL_info = require("./SQL_info");
+let sql_promise = require("mysql-promisify");
 
+const Queries = require("./sql_queries");
+const MyPrompts = require('./inquirer_prompts');
 
-
+const my_queries = new Queries();
+const my_prompts = new MyPrompts();
 
 
 
@@ -43,6 +47,9 @@ function promptUser() {
                     "view all by department",
                     "view all by manager",
                     "add employee",
+                    "add department",
+                    "remove department",
+                    "view all departments",
                     "remove employee",
                     "update employee role",
                     "update employee manager",
@@ -79,10 +86,22 @@ function promptUser() {
             updateManager();
             break;
 
+            case "add department":
+            addDepartment();
+            break;
+
+            case "remove department":
+            removeDepartment();
+            break;
+
+            case "view all departments":
+            showDepartments();
+            break;
+
         //this part made the inquirer options repeat, for some reason
-            // case "Exit.":
-            // connection.end();
-            // break;
+            case "Exit.":
+            connection.end();
+            break;
 
             default:
             connection.end();
@@ -417,6 +436,71 @@ function updateManager() {
             })
         })
     })
+}
+
+
+function addDepartment() {
+    my_prompts.addDepartment().then(name => my_queries.newDepartment(name));
+    // my_queries.showDepartments();
+}
+
+
+function addDepartment() {
+    inquirer.prompt([
+        {
+            name: "name",
+            type: "input",
+            message: "What is the name of the new department?"
+        }
+    ]).then(name => {
+        connection.query(`INSERT INTO department SET ?`, {name:name.name},function(err, res) {
+            if(err) throw err;
+        console.log(`${name.name} successfully added as new deparment`);
+        promptUser();
+    })
+    })
+}
+
+
+function showDepartments() {
+    connection.query(`SELECT * FROM department`, function(err, res)
+{
+    if (err) throw err;
+
+    console.table(res);
+    promptUser();
+
+})
+}
+
+
+function removeDepartment() {
+
+connection.query(`SELECT * FROM department`, function(err, res) {
+    if(err) throw new Error("can;t fetch departments");
+
+
+    inquirer.prompt([
+        {
+            name: "name",
+            type: "rawlist",
+            message: "What is the name of the department you'd like to remove?",
+            choices: function() {
+                let departmentsArr = []; 
+                for(let i=0; i<res.length; i++){
+                    departmentsArr.push(res[i].name)
+                }
+                return departmentsArr;
+            }
+        }
+    ]).then(name => {
+        connection.query(`DELETE FROM department WHERE ?`, {name:name.name},function(err, res) {
+            if(err) throw err;
+        console.log(`${name.name} successfully deleted deparment`);
+        promptUser();
+    })
+    })
+})
 }
 
 
